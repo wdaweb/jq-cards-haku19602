@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>翻牌｜文藝復興</title>
+  <style>
+    body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./images/0.jpg);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      /* #game 區排列 */
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+    }
+
+    #info {
+      width: 25%;
+      height: 65%;
+      /* 裡面文字 */
+      color: rgb(230, 204, 184);
+      font-family: 微軟正黑體;
+    }
+
+    #guide {
+      margin: 0 auto 3% auto;
+      text-align: center;
+      font-size: 20px;
+      font-style: italic;
+    }
+
+    #box {
+      width: 100%;
+      height: 90%;
+      border: 3px solid rgb(190, 162, 139);
+      border-radius: 5%;
+      overflow: hidden;
+      /* 裡面文字 */
+      color: rgb(230, 204, 184);
+      font-family: 微軟正黑體;
+      /*  */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #box #work {
+      /* background-color: black; */
+      width: 80%;
+      height: 35%;
+    }
+
+    #pic {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      /* 一開始會有框線 */
+      display: none;
+    }
+
+    #box #text {
+      /* background-color: rgb(158, 141, 120); */
+      width: 80%;
+      margin-top: 3%;
+    }
+
+    #title {
+      /* background-color: antiquewhite; */
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #content {
+      /* background-color: antiquewhite; */
+      margin-top: 3%;
+      line-height: 1.5;
+    }
+
+    #game {
+      /* background-color: #aaa; */
+      width: 65%;
+      height: 70%;
+      /* 裡面 .card 的位置 */
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      /* border: 1px solid #fff; */
+      width: 15%;
+      height: 45%;
+      margin: 0.5%;
+      /* 讓 .card-front .card-back 定位 */
+      position: relative;
+      /* 讓子元素在 3D 空間內 */
+      transform-style: preserve-3d;
+      /* 轉場動畫 */
+      transition: 1s;
+    }
+
+    .card-front {
+      width: 100%;
+      height: 100%;
+      background-image: url(./images/r1.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      /* ----- 翻牌設定，先設定非關閉狀態  */
+      /* 隱藏背面，翻過來 180deg 時不要顯示 */
+      backface-visibility: hidden;
+    }
+
+    .card-back {
+      width: 100%;
+      height: 100%;
+      background-image: url(./images/back.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      /* ----- 翻牌設定，先設定非關閉狀態 */
+      /* rotateY，左右翻 */
+      transform: rotateY(180deg);
+      /* 隱藏背景，翻過來 180deg 時不要顯示 */
+      backface-visibility: hidden;
+    }
+
+    /* 關閉狀態，把 class 加到要關閉的 */
+    .card-close {
+      transform: rotateY(180deg);
+    }
+
+    #button {
+      width: 150px;
+      height: 60px;
+      border-radius: 20px;
+      background-color: rgb(111, 61, 40);
+      border-bottom: 15px solid rgb(73, 33, 17);
+      position: absolute;
+      display: none;
+      /* 文字 */
+      font-size: 30px;
+      color: rgb(230, 204, 184);
+      text-align: center;
+      line-height: 60px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="game">
+    <div id="button">Click !</div>
+  </div>
+
+  <div id="info">
+    <div id="guide">找出作品碎片並配對！</div>
+
+    <div id="box">
+      <div id="work"><img id="pic"></div>
+      <div id="text">
+        <div id="title"></div>
+        <div id="content"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 引入 sweetalert -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.32/sweetalert2.all.min.js'
+    integrity='sha512-zB7yJLSASiSevQmWCrQaq+z/f5zRIa884hwWgmK1oI3MfolIzKcpDtyfBsrGqUi/hMCObVwr/+SZTByOqh0zkQ=='
+    crossorigin='anonymous'></script>
+  <!-- jQ 連結 -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js'
+    integrity='sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=='
+    crossorigin='anonymous'></script>
+
+  <script>
+    // ---------- 產生 12 卡片
+    for (let i = 0; i < 12; i++) {
+      $('#game').append(`
+      <div class="card card-close">
+        <div class="card-front"></div>
+        <div class="card-back"></div>
+      </div>
+    `)
+    }
+
+    // ---------- 決定每張卡片
+    $('.card').each(function (index) {
+      $(this).find('.card-front').css('background-image', `url(./images/r${index + 1}.png)`)
+
+      // 存一個數字在標籤上，用來判斷配對
+      // $(this).attr('要存的屬性名稱', 要存的資料)
+      // data-xxx ---> 是一個資料屬性，可以存想要的資料在標籤上
+      // data-自訂名稱 --> 資料夾名稱
+      $(this).attr('data-number', (index + 1) % 6)
+    })
+
+    // ---------- 打亂，洗牌 20 次
+    for (let i = 0; i < 20; i++) {
+      // 隨機 0 ~ 11 兩個數字，當作索引
+      const randomA = Math.round(Math.random() * 11)  // 0 ~ 11
+      const randomB = Math.round(Math.random() * 11)  // 0 ~ 11
+      // 把索引A的東西，放到索引B後面
+      $('.card').eq(randomA).insertAfter($('.card').eq(randomB))
+    }
+
+    // ---------- 翻牌
+    // #game 觸發點擊事件，且點到的是 .card 時，執行 function
+    $('#game').on('click', '.card', function () {
+
+      // === 可翻牌的狀態
+      if (
+        // 如果已翻開張數 < 2 張
+        $('.card:not(.card-close)').length < 2 &&
+        // 且 這張牌還沒翻開
+        $(this).hasClass('card-close') &&
+        // 且 這張牌還沒配對
+        !$(this).hasClass('card-ok')
+      ) {
+        $(this).removeClass('card-close')
+      }
+
+      // === 如果已經翻開兩張
+      if ($('.card:not(.card-close)').length === 2) {
+
+        // 如果翻開的兩張一樣
+        if (
+          $('.card:not(.card-close)').eq(0).attr('data-number') ===
+          $('.card:not(.card-close)').eq(1).attr('data-number')
+        ) {
+          $('.card:not(.card-close)').addClass('card-ok')
+          // fadeOut(1000) 會 display: none，影響版面
+          $('.card:not(.card-close)').fadeTo(1000, 0)
+          // ========== 資訊出現
+          const cardNum = $('.card:not(.card-close)').eq(0).attr('data-number')
+          $('#pic').attr('src', `./images/${cardNum}.jpg`)
+          $('#pic').css('display', 'block')
+          if (parseInt(cardNum) === 0) {
+            $('#title').text('《最後的晚餐》達文西')
+            $('#content').text('《最後的晚餐》是達文西的傑作之一，被視為文藝復興時期的巔峰之作。畫作的特色之一是達文西對光影和透視的巧妙運用，以及對每一個角色情感表達的細膩描繪。畫中的場景表現了耶穌宣告有一個門徒會背叛他的時刻，門徒們各自表現出不同的情感和反應。')
+          }
+          if (parseInt(cardNum) === 1) {
+            $('#title').text('《創造亞當》米開朗基羅')
+            $('#content').text('畫面中上帝伸出手指賜予亞當生命，象徵人與神的密切聯繫，畫面中的手勢和表情凸顯出神聖瞬間的靈動與意義，是對人類存在意義的深刻詮釋。此作品深刻探討了宗教信仰、人性、與美的結合，成為文藝復興藝術的巔峰之一。米開朗基羅透過精湛技法，將超越凡俗的主題轉化為永恆的藝術之美，啟發人們對生命、智慧和神性的思考。')
+          }
+          if (parseInt(cardNum) === 2) {
+            $('#title').text('《維納斯的誕生》波提且利')
+            $('#content').text('《維納斯的誕生》呈現愛與美女神維納斯優雅誕生的場景。畫面中的女神身姿曼妙、比例完美，透過藝術家精湛的繪畫技巧，捕捉了神秘、優雅和純粹之美，表達對人體的讚美。作品注重裸體藝術，強調古典藝術的復興，是文藝復興時期的代表作之一。')
+          }
+          if (parseInt(cardNum) === 3) {
+            $('#title').text('《蒙娜麗莎》達文西')
+            $('#content').text('達文西運用光影的精湛技巧和逼真的細節，描繪了女人深邃的眼神和細緻的微笑，優雅、神秘的姿態，賦予畫中人物生命力，成為世界藝術史上最著名的肖像之一。《蒙娜麗莎》不僅在藝術上有卓越成就，更在表現主題的情感和神秘感方面成為經典。這幅畫在世界各地引起廣泛迴響，成為文化的象徵。')
+          }
+          if (parseInt(cardNum) === 4) {
+            $('#title').text('《大衛像》米開朗基羅')
+            $('#content').text('《大衛像》是文藝復興大師米開朗基羅著名的大理石雕塑。雕像描繪年輕的以色列英雄大衛，準備迎戰巨人歌利亞的一瞬間，展現了大衛的完美身軀和英勇姿態，以及米開朗基羅對肌肉結構和人體比例的卓越掌握。作品在當時被視為雕塑的巔峰之一，體現了文藝復興對古典藝術的追求。')
+          }
+          if (parseInt(cardNum) === 5) {
+            $('#title').text('《雅典學院》拉斐爾')
+            $('#content').text('《雅典學院》描繪了古希臘的學術場景。畫中聚焦於亞里斯多德和柏拉圖，代表理性和哲學，被視為拉斐爾對學問和智慧的致敬。畫面充滿和諧，人物表現細膩，建構了一個理想的學術環境。這件作品是拉斐爾參與梵蒂岡宮壁畫計畫的一部分，也代表了文藝復興時期對古典思想的崇敬。')
+          }
+        }
+
+        // 一秒後翻回來
+        setTimeout(function () {
+          // 翻回來， 包含已經配對的也加上 .card-close，維持只有兩張沒有 close
+          $('.card:not(.card-close)').addClass('card-close')
+          // 過關判斷，剛好可以寫在計時器裡面，先 fadeout，1 秒後再 alert
+          // $('.card').length
+          if ($('.card-ok').length === $('.card').length) {
+            $('#button').css('display', 'block')
+            $('#button').click(function () {
+              $('#button').css('display', 'none')
+              $('#info').css('display', 'none')
+              Swal.fire({
+                icon: 'success',
+                title: `Finished <span>&#128077;</span>`,
+              })
+              // sweetalert 造成背景跑版問題
+              $('.swal2-height-auto').css('height', '100vh')
+            })
+          }
+        }, 1000)
+
+      }
+
+
+
+    })
+
+  </script>
+</body>
+
+</html>
